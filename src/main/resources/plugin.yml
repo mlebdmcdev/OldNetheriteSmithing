@@ -1,0 +1,14 @@
+name: OldNetheriteSmithing
+version: '${project.version}'
+main: ru.lebedinets.mc.oldnetheritesmithing.OldNetheriteSmithing
+api-version: '1.20'
+prefix: OldNetheriteSmithing
+authors: [Mikhail Lebedinets]
+description: A simple plugin that allows to upgrade gear without smithing template
+website: https://github.com/iwalfy/OldNetheriteSmithing
+commands:
+  unsmith:
+    aliases: [undosmith, undosmithing]
+    description: Undo last netherite upgrade in Smithing Table
+    usage: /unsmith
+    permission: oldnetheritesmith.unsmith
