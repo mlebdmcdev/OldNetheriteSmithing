@@ -13,7 +13,7 @@ import java.util.*;
 
 public class UnsmithCommand implements CommandExecutor {
     private final Utils utils = new Utils();
-    public static final Map<UUID, ArrayList> lastSmithMap = new HashMap<>();
+    public static final Map<UUID, LastSmithEntry> lastSmithMap = new HashMap<>();
     private final int timeToUnsmith = 30;
     private final TrackableItemManager trm;
 
@@ -41,11 +41,11 @@ public class UnsmithCommand implements CommandExecutor {
             return true;
         }
 
-        ArrayList mixedList = lastSmithMap.get(uuid);
-        Material srcItem = (Material) mixedList.get(0);
-        Material item = (Material) mixedList.get(1);
-        UUID smid = (UUID) mixedList.get(2);
-        long createTime = (long) mixedList.get(3);
+        LastSmithEntry lastSmithEntry = lastSmithMap.get(uuid);
+        Material srcItem = lastSmithEntry.srcItem;
+        Material item = lastSmithEntry.item;
+        UUID smid = lastSmithEntry.smid;
+        long createTime = lastSmithEntry.createTime;
         long currentTime = System.currentTimeMillis();
 
         long expireTime = createTime + (timeToUnsmith * 1000L);

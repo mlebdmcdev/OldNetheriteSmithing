@@ -60,13 +60,8 @@ public final class OldNetheriteSmithing extends JavaPlugin implements Listener {
             if (item2 == Material.NETHERITE_INGOT && resultMap.containsKey(item1)) {
                 UUID newItemUuid = UUID.randomUUID();
                 ItemStack itemStack = trm.createTrackableItem(resultMap.get(item1), "smid", newItemUuid.toString());
-                //ItemStack itemStack = new ItemStack(resultMap.get(item1));
 
-                ArrayList<Object> mixedList = new ArrayList<>();
-                mixedList.add(resultMap.get(item1));
-                mixedList.add(item1);
-                mixedList.add(newItemUuid);
-                mixedList.add(currentTime);
+                LastSmithEntry lastSmithEntry = new LastSmithEntry(resultMap.get(item1), item1, newItemUuid, currentTime);
 
                 utils.decreaseItem(event, 1, inputItems[1], 1);
                 utils.decreaseItem(event, 2, inputItems[2], 1);
@@ -76,7 +71,7 @@ public final class OldNetheriteSmithing extends JavaPlugin implements Listener {
                     @Override
                     public void run() {
                         utils.giveItemToPlayer(player, itemStack);
-                        UnsmithCommand.lastSmithMap.put(player.getUniqueId(), mixedList);
+                        UnsmithCommand.lastSmithMap.put(player.getUniqueId(), lastSmithEntry);
                     }
                 }.runTaskLater(this, 10);
             }
