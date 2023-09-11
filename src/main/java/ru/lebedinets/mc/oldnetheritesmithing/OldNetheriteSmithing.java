@@ -1,25 +1,25 @@
 package ru.lebedinets.mc.oldnetheritesmithing;
 
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareSmithingEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public final class OldNetheriteSmithing extends JavaPlugin implements Listener {
 
     private static final Map<Material, Material> resultMap = new HashMap<>();
-    private final Utils utils = new Utils();
-    private final UnsmithCommand unsmithCommand = new UnsmithCommand(this);
-    private final TrackableItemManager trm = new TrackableItemManager(this);
+    private final ArrayList<UUID> currentlySmithingPlayers = new ArrayList<>();
+    private final UpdateChecker updateChecker = new UpdateChecker(this.getDescription(), this.getServer());
 
     private void populateResultMap() {
         resultMap.put(Material.DIAMOND_AXE, Material.NETHERITE_AXE);
@@ -40,7 +40,11 @@ public final class OldNetheriteSmithing extends JavaPlugin implements Listener {
 
         populateResultMap();
         getServer().getPluginManager().registerEvents(this, this);
-        getCommand("unsmith").setExecutor(unsmithCommand);
+
+        int pluginId = 19782;
+        Metrics metrics = new Metrics(this, pluginId);
+
+        updateChecker.checkForUpdates();
     }
 
     @Override
@@ -50,30 +54,52 @@ public final class OldNetheriteSmithing extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        Inventory closedInventory = event.getInventory();
+        Player player = (Player) event.getPlayer();
+        if (closedInventory.getType() == InventoryType.SMITHING && closedInventory.getItem(0) != null && Objects.requireNonNull(closedInventory.getItem(0)).getType() == Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE) {
+            ItemStack item1 = closedInventory.getItem(1);
+            ItemStack item2 = closedInventory.getItem(2);
+            if (item1 != null) {
+                player.getInventory().addItem(item1);
+            }
+            if (item2 != null) {
+                player.getInventory().addItem(item2);
+            }
+            closedInventory.clear();
+        }
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getInventory().getType() == InventoryType.SMITHING && currentlySmithingPlayers.contains(event.getWhoClicked().getUniqueId())) {
+            if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE) {
+                event.setCancelled(true);
+            }
+            if (event.getRawSlot() == event.getInventory().getSize() - 1) {
+                currentlySmithingPlayers.remove(event.getWhoClicked().getUniqueId());
+            }
+        }
+    }
+
+    @EventHandler
     public void onPrepareSmithing(PrepareSmithingEvent event) {
         ItemStack[] inputItems = event.getInventory().getContents();
         Player player = (Player) event.getView().getPlayer();
-        long currentTime = System.currentTimeMillis();
+
+        if ((inputItems[1] == null || inputItems[2] == null) && currentlySmithingPlayers.contains(player.getUniqueId())) {
+            event.getInventory().removeItem(new ItemStack(Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE));
+            currentlySmithingPlayers.remove(player.getUniqueId());
+        }
+
         if (inputItems.length >= 3 && inputItems[1] != null && inputItems[2] != null) {
             Material item1 = inputItems[1].getType();
             Material item2 = inputItems[2].getType();
             if (item2 == Material.NETHERITE_INGOT && resultMap.containsKey(item1)) {
-                UUID newItemUuid = UUID.randomUUID();
-                ItemStack itemStack = trm.createTrackableItem(resultMap.get(item1), "smid", newItemUuid.toString());
+                currentlySmithingPlayers.add(player.getUniqueId());
 
-                LastSmithEntry lastSmithEntry = new LastSmithEntry(resultMap.get(item1), item1, newItemUuid, currentTime);
-
-                utils.decreaseItem(event, 1, inputItems[1], 1);
-                utils.decreaseItem(event, 2, inputItems[2], 1);
-
-                // small delay to prevent item deletion
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        utils.giveItemToPlayer(player, itemStack);
-                        UnsmithCommand.lastSmithMap.put(player.getUniqueId(), lastSmithEntry);
-                    }
-                }.runTaskLater(this, 10);
+                ItemStack smithingTemplate = new ItemStack(Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
+                event.getInventory().addItem(smithingTemplate);
             }
         }
     }
