@@ -4,7 +4,7 @@ A simple plugin that allows to upgrade gear without smithing template
 
 Permissions: `oldnethersmithing.smith`
 
-Spigot: https://www.spigotmc.org/resources/oldnetheritesmithing.112594/
+Spigot: https://www.spigotmc.org/resources/oldnetheritesmithing.112594/ <br/>
 Modrinth: https://modrinth.com/plugin/oldnetheritesmithing
 
 ![demo](demo.webp)
