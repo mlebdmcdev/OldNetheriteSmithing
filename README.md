@@ -11,4 +11,4 @@ Modrinth: https://modrinth.com/plugin/oldnetheritesmithing
 
 Also you may try https://github.com/TrollsterCooleg/NoNetheriteTemplate this is more straightforward plugin that adds custom smithing table recipes, but this implementation does not compatible with permissions because register recipes globally. Use this plugin only if you need permissions, otherwise use the one that was provided earlier.
 
-![stats](https://bstats.org/signatures/bukkit/OldNetheriteSmithing.svg)
+[![stats](https://bstats.org/signatures/bukkit/OldNetheriteSmithing.svg)](https://bstats.org/plugin/bukkit/OldNetheriteSmithing/19782)
